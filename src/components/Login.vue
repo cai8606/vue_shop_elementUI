@@ -37,20 +37,20 @@ export default {
     return {
       //登录表单的数据绑定对象
       loginForm: {
-        username: "zhangsan",
-        password: "12345678"
+        username: "",
+        password: ""
       },
       //表单的验证规则对象
       loginFormRules: {
         //验证用户名是否合法
         username: [
           { required: true, message: "请输入登录名称", trigger: "blur" },
-          { min: 3, max: 10, message: "长度在 3 到 10 个字符", trigger: "blur" }
+          { min: 2, max: 10, message: "长度在 2 到 10 个字符", trigger: "blur" }
         ],
         //验证密码是否合法
         password: [
           { required: true, message: "请输入登录密码", trigger: "change" },
-          { min: 6, max: 15, message: "长度在 6 到 15 个字符", trigger: "blur" }
+          { min: 2, max: 15, message: "长度在 2 到 15 个字符", trigger: "blur" }
         ]
       }
     };
@@ -63,26 +63,19 @@ export default {
     },
     login() {
       this.$refs.loginFormRef.validate(async valid => {
-        if (!valid) return;
-        //const _this = this;
-        const { data: res } = await this.$http.post(
-          "/auth/login",
-          this.$qs.stringify(this.loginForm)
-        );
-        if (res.statusCode !== 200) return this.$message.error("登录失败");
-        this.$message.success('登录成功');
-        window.sessionStorage.setItem('token', res.token);
-        this.$router.push("/home");
+        if (!valid) return
+        const {data: res} = await this.$http.post("/login", this.$qs.stringify(this.loginForm))
+        //console.log(res);
+        if (res.statusCode !== 200) return this.$message.error("登录失败,用户名或密码错误")
 
-        // .then(function (response) {
-        //   console.log(response);
-
-        //   // _this.$message.success('登录成功');
-        //   // _this.$router.push("/home");
-        // })
-        // .catch(function (error) {
-        //   _this.$message.error('登录失败')
-        // });
+        const {data: result} = await this.$http.get('/user/queryPermsByUsername?username='+this.loginForm.username)
+        //console.log(result);
+        
+        this.$message.success('登录成功')
+        window.sessionStorage.setItem('token', res.data)
+        window.sessionStorage.setItem('username',res.data.username)
+        window.localStorage.setItem('permissionList',JSON.stringify(result))
+        this.$router.push('/home')
       });
     }
   }
